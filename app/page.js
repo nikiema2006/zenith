@@ -18,7 +18,7 @@ const CAT_ICONS = {
 
 export default async function Home() {
   const trending = await getTrendingProducts();
-  const slides = trending.slice(0, 4);
+  const slides = trending.slice(0, 6);
 
   return (
     <div data-testid="home-page">
@@ -33,7 +33,7 @@ export default async function Home() {
               <span className="text-[#C8A03B]">⬢</span>
               <span className="text-muted-foreground">Maritime · Aérien Standard</span>
               <span className="text-[#C8A03B]"></span>
-              <span className="text-muted-foreground">De Shenzhen à Ouaga, sans stress</span>
+              <span className="text-muted-foreground">De Guanzhou à Ouaga, sans stress</span>
               <span className="text-[#C8A03B]">⬢</span>
               <span className="text-muted-foreground">Paiement sécurisé Mobile Money</span>
               <span className="text-[#C8A03B]">⬢</span>
@@ -63,7 +63,7 @@ export default async function Home() {
                 data-testid={`home-category-${cat.id}`}
                 className="shrink-0 flex flex-col items-center gap-1.5 w-[72px]"
               >
-                <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border shadow-soft flex items-center justify-center hover:border-[#C8A03B]/50 transition-all">
+                <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-gray-300 shadow-soft flex items-center justify-center hover:border-[#C8A03B]/50 transition-all">
                   <Icon size={22} className="text-[#C8A03B]" strokeWidth={1.7} />
                 </div>
                 <span className="text-[11px] font-medium text-foreground text-center leading-tight">{cat.label}</span>
@@ -115,7 +115,7 @@ export default async function Home() {
             <ShieldCheck size={36} className="text-[#C8A03B] mb-5" strokeWidth={1.5} />
             <h3 className="font-display text-2xl text-foreground mb-3">Tu envoies. On vérifie.</h3>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-              Notre équipe à Shenzhen contrôle visuellement chaque lot avant emballage. Photos et vidéos disponibles sur demande.
+              Notre équipe à Guanzhou contrôle visuellement chaque lot avant emballage. Photos et vidéos disponibles sur demande.
             </p>
           </div>
 

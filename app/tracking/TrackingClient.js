@@ -98,7 +98,7 @@ export default function TrackingClient() {
 
             <div className="grid grid-cols-2 gap-4 mb-5">
               <MetaCard icon={Truck} label="Mode" value={tracking.shipping_mode || "N/A"} />
-              <MetaCard icon={MapPin} label="Origine" value={tracking.origin || "Shenzhen, CN"} />
+              <MetaCard icon={MapPin} label="Origine" value={tracking.origin || "Guanzhou, CN"} />
               <MetaCard icon={Clock} label="ETA" value={tracking.eta || "N/A"} />
               <MetaCard icon={CheckCircle} label="Statut" value={tracking.current_status || "N/A"} highlight />
             </div>

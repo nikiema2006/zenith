@@ -15,7 +15,7 @@ import CrudTable from '@/components/admin/CrudTable';
 import ProductForm from '@/components/admin/ProductForm';
 import AIProductImport from '@/components/admin/AIProductImport';
 
-const LOGO = "https://customer-assets.emergentagent.com/job_china-africa-trade-1/artifacts/gm0lbsx0_logochinaexpress-removebg-preview.png";
+const LOGO = "/logo.webp";
 
 const SECTIONS = {
   products: {

@@ -1,6 +1,6 @@
 import { Phone, MessageCircle, Mail, MapPin } from "lucide-react";
 
-const LOGO = "https://customer-assets.emergentagent.com/job_china-africa-trade-1/artifacts/gm0lbsx0_logochinaexpress-removebg-preview.png";
+const LOGO = "/logo.webp";  
 
 export default function Footer() {
   return (
@@ -20,7 +20,7 @@ export default function Footer() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Le pont entre les usines chinoises et ton business en Afrique. De Shenzhen à Ouaga, sans stress.
+            Le pont entre les usines chinoises et ton business en Afrique. De Guanzhou à Ouaga, sans stress.
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export default function Footer() {
       <div className="border-t border-[#C8A03B]/10 py-5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <p>© 2026 Zenith Global. Tous droits réservés.</p>
-          <p className="font-mono tracking-wider">Shenzhen → Ouagadougou</p>
+          <p className="font-mono tracking-wider">Guanzhou → Ouagadougou</p>
         </div>
       </div>
     </footer>
