@@ -4,56 +4,27 @@
 
 body {
     margin: 0;
-    font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-montserrat), system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #FDFBF7;
-    color: #1A1515;
 }
 
 code, .font-mono {
-    font-family: var(--font-jetbrains), Menlo, Monaco, Consolas, monospace;
+    font-family: var(--font-montserrat), system-ui, -apple-system, sans-serif;
 }
 
 .font-display {
-    font-family: var(--font-fraunces), 'Playfair Display', serif;
-    font-variation-settings: 'opsz' 80, 'SOFT' 50, 'WONK' 0;
+    font-family: var(--font-montserrat), system-ui, -apple-system, sans-serif;
+    font-weight: 700;
     letter-spacing: -0.02em;
 }
 
 .font-body {
-    font-family: var(--font-jakarta), sans-serif;
+    font-family: var(--font-montserrat), sans-serif;
 }
 
 @layer base {
     :root {
-        --background: 36 50% 98%;
-        --foreground: 12 10% 9%;
-        --card: 0 0% 100%;
-        --card-foreground: 12 10% 9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 12 10% 9%;
-        --primary: 351 78% 43%;
-        --primary-foreground: 36 50% 98%;
-        --secondary: 36 30% 94%;
-        --secondary-foreground: 12 10% 9%;
-        --muted: 36 30% 94%;
-        --muted-foreground: 24 5% 36%;
-        --accent: 41 78% 41%;
-        --accent-foreground: 36 50% 98%;
-        --destructive: 0 65% 39%;
-        --destructive-foreground: 36 50% 98%;
-        --border: 36 18% 86%;
-        --input: 36 18% 88%;
-        --ring: 41 78% 41%;
-        --chart-1: 41 78% 41%;
-        --chart-2: 351 78% 43%;
-        --chart-3: 12 10% 9%;
-        --chart-4: 24 5% 50%;
-        --chart-5: 36 18% 70%;
-        --radius: 0.85rem;
-    }
-    .dark {
         --background: 0 0% 4%;
         --foreground: 36 50% 98%;
         --card: 12 17% 8%;
@@ -75,6 +46,7 @@ code, .font-mono {
         --ring: 43 65% 52%;
         --chart-1: 43 65% 52%;
         --chart-2: 351 78% 43%;
+        --radius: 0.85rem;
     }
 }
 
@@ -99,22 +71,22 @@ code, .font-mono {
 }
 
 ::selection {
-    background-color: #B8941E;
-    color: #FDFBF7;
+    background-color: #C8A03B;
+    color: #000000;
 }
 
 .glass {
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
-    background-color: rgba(253, 251, 247, 0.75);
-    border: 1px solid rgba(184, 148, 30, 0.18);
+    background-color: rgba(10, 10, 10, 0.75);
+    border: 1px solid rgba(200, 160, 59, 0.18);
 }
 
 .glass-strong {
     backdrop-filter: blur(28px) saturate(160%);
     -webkit-backdrop-filter: blur(28px) saturate(160%);
-    background-color: rgba(253, 251, 247, 0.92);
-    border: 1px solid rgba(184, 148, 30, 0.22);
+    background-color: rgba(10, 10, 10, 0.92);
+    border: 1px solid rgba(200, 160, 59, 0.22);
 }
 
 .text-gold-gradient {
@@ -128,14 +100,14 @@ code, .font-mono {
     box-shadow: 0 8px 26px -6px rgba(200, 16, 46, 0.45), 0 0 0 1px rgba(200, 16, 46, 0.1);
 }
 .glow-gold {
-    box-shadow: 0 8px 26px -6px rgba(184, 148, 30, 0.4), 0 0 0 1px rgba(184, 148, 30, 0.1);
+    box-shadow: 0 8px 26px -6px rgba(200, 160, 59, 0.4), 0 0 0 1px rgba(200, 160, 59, 0.1);
 }
 
 .shadow-soft {
-    box-shadow: 0 1px 2px rgba(26, 21, 21, 0.04), 0 8px 24px -8px rgba(26, 21, 21, 0.08);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px -8px rgba(0, 0, 0, 0.4);
 }
 .shadow-elev {
-    box-shadow: 0 2px 4px rgba(26, 21, 21, 0.06), 0 16px 40px -12px rgba(26, 21, 21, 0.18);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 16px 40px -12px rgba(0, 0, 0, 0.6);
 }
 
 .pb-safe {
@@ -147,7 +119,7 @@ code, .font-mono {
 
 *:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #B8941E;
+    box-shadow: 0 0 0 2px #C8A03B;
 }
 
 @keyframes marquee {

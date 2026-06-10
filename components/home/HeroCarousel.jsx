@@ -20,7 +20,7 @@ export default function HeroCarousel({ slides }) {
   return (
     <section
       data-testid="hero-carousel"
-      className="relative overflow-hidden h-[78vh] min-h-[540px] md:h-[88vh] md:min-h-[620px] bg-[#FDFBF7]"
+      className="relative overflow-hidden h-[78vh] min-h-[540px] md:h-[88vh] md:min-h-[620px] bg-background"
     >
       <div
         className="absolute inset-0 opacity-[0.07] animate-phoenix mix-blend-screen pointer-events-none"
@@ -45,10 +45,10 @@ export default function HeroCarousel({ slides }) {
           <img
             src={current.images[0]}
             alt={current.name}
-            className="w-full h-full object-cover opacity-40"
+            className="w-full h-full object-cover opacity-30"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FDFBF7] via-[#FDFBF7]/0 to-[#FDFBF7]/0" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#FDFBF7] via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/0 to-black/0" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
         </motion.div>
       </AnimatePresence>
 
@@ -59,10 +59,10 @@ export default function HeroCarousel({ slides }) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[#B8941E]/30"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[#C8A03B]/30"
           >
-            <Sparkles size={12} className="text-[#B8941E]" />
-            <span className="text-[10px] uppercase tracking-[0.3em] text-[#B8941E] font-medium">
+            <Sparkles size={12} className="text-[#C8A03B]" />
+            <span className="text-[10px] uppercase tracking-[0.3em] text-[#C8A03B] font-medium">
               {current.badge || "Produit phare"}
             </span>
           </motion.div>
@@ -74,7 +74,7 @@ export default function HeroCarousel({ slides }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.6 }}
-              className="font-display text-4xl sm:text-5xl lg:text-6xl text-[#1A1515] leading-[1.05]"
+              className="font-display text-4xl sm:text-5xl lg:text-6xl text-foreground leading-[1.05]"
             >
               {current.name}
               <br />
@@ -87,7 +87,7 @@ export default function HeroCarousel({ slides }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="text-base md:text-lg text-[#5C5854] leading-relaxed max-w-xl"
+            className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl"
           >
             {current.description?.slice(0, 100) + "..." || "Aucune description disponible"}
            
@@ -101,15 +101,15 @@ export default function HeroCarousel({ slides }) {
             className="flex items-end gap-6"
           >
             <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-[#5C5854]">Prix gros dès</p>
-              <p className="font-mono text-3xl md:text-4xl font-bold text-[#B8941E]">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Prix gros dès</p>
+              <p className="font-mono text-3xl md:text-4xl font-bold text-[#C8A03B]">
                 {formatXOF(current.wholesalePrice)}
               </p>
             </div>
-            <div className="hidden sm:block w-px h-12 bg-[#B8941E]/20" />
+            <div className="hidden sm:block w-px h-12 bg-[#C8A03B]/20" />
             <div className="hidden sm:block">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-[#5C5854]">Revente locale</p>
-              <p className="font-mono text-xl text-[#1A1515] flex items-center gap-1.5">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Revente locale</p>
+              <p className="font-mono text-xl text-foreground flex items-center gap-1.5">
                 <TrendingUp size={16} className="text-[#1F6B23]" />
                 {formatXOF(current.suggestedSellPrice)}
               </p>
@@ -133,7 +133,7 @@ export default function HeroCarousel({ slides }) {
             <Link
               href="/catalogue"
               data-testid="hero-cta-catalog"
-              className="inline-flex items-center gap-2 px-7 py-3.5 border border-[#B8941E] text-[#B8941E] rounded-md font-semibold hover:bg-[#B8941E]/10 transition-all text-sm uppercase tracking-wider"
+              className="inline-flex items-center gap-2 px-7 py-3.5 border border-[#C8A03B] text-[#C8A03B] rounded-md font-semibold hover:bg-[#C8A03B]/10 transition-all text-sm uppercase tracking-wider"
             >
               Tout le catalogue
             </Link>
@@ -149,15 +149,15 @@ export default function HeroCarousel({ slides }) {
             data-testid={`hero-dot-${i}`}
             aria-label={`Aller au produit ${i + 1}`}
             className={`h-1 rounded-full transition-all ${
-              i === index ? "w-10 bg-[#B8941E]" : "w-5 bg-[#1A1515]/20 hover:bg-[#1A1515]/40"
+              i === index ? "w-10 bg-[#C8A03B]" : "w-5 bg-white/20 hover:bg-white/40"
             }`}
           />
         ))}
       </div>
 
-      <div className="hidden md:flex absolute top-8 right-8 items-center gap-3 font-mono text-xs tracking-wider text-[#5C5854]">
-        <span className="text-[#B8941E] text-2xl">{String(index + 1).padStart(2, "0")}</span>
-        <div className="w-12 h-px bg-[#B8941E]/30" />
+      <div className="hidden md:flex absolute top-8 right-8 items-center gap-3 font-mono text-xs tracking-wider text-muted-foreground">
+        <span className="text-[#C8A03B] text-2xl">{String(index + 1).padStart(2, "0")}</span>
+        <div className="w-12 h-px bg-[#C8A03B]/30" />
         <span>{String(slides.length).padStart(2, "0")}</span>
       </div>
     </section>

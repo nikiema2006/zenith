@@ -55,34 +55,34 @@ function CatalogInner({ initialProducts, categories }) {
   return (
     <div data-testid="catalog-page" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12">
       <div className="mb-6 md:mb-10">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-[#B8941E] mb-2">Catalogue</p>
-        <h1 className="font-display text-3xl md:text-5xl text-[#1A1515]">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-[#C8A03B] mb-2">Catalogue</p>
+        <h1 className="font-display text-3xl md:text-5xl text-foreground">
           {initialProducts.length} produits, <span className="text-gold-gradient">prix d&apos;usine.</span>
         </h1>
-        <p className="text-sm md:text-base text-[#5C5854] mt-3 max-w-xl">
+        <p className="text-sm md:text-base text-muted-foreground mt-3 max-w-xl">
           Sourcés en Chine. Calcule ta marge sur chaque produit avec notre simulateur intégré.
         </p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5C5854]" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             data-testid="catalog-search"
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un produit..."
-            className="w-full bg-[#FFFFFF] border border-[#B8941E]/15 rounded-lg pl-11 pr-4 py-3 text-sm text-[#1A1515] placeholder:text-[#8A857F] focus:border-[#B8941E]/50 focus:outline-none"
+            className="w-full bg-card border border-[#C8A03B]/15 rounded-lg pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#C8A03B]/50 focus:outline-none"
           />
         </div>
         <div className="relative">
-          <SlidersHorizontal size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5C5854] pointer-events-none" />
+          <SlidersHorizontal size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <select
             data-testid="catalog-sort"
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="appearance-none bg-[#FFFFFF] border border-[#B8941E]/15 rounded-lg pl-11 pr-10 py-3 text-sm text-[#1A1515] focus:border-[#B8941E]/50 focus:outline-none cursor-pointer"
+            className="appearance-none bg-card border border-[#C8A03B]/15 rounded-lg pl-11 pr-10 py-3 text-sm text-foreground focus:border-[#C8A03B]/50 focus:outline-none cursor-pointer"
           >
             <option value="featured">À la une</option>
             <option value="price-asc">Prix croissant</option>
@@ -102,8 +102,8 @@ function CatalogInner({ initialProducts, categories }) {
               onClick={() => setActiveCat(cat.id)}
               className={`shrink-0 px-4 py-2 rounded-full text-sm transition-all whitespace-nowrap border ${
                 active
-                  ? "bg-[#B8941E] text-[#1A1515] border-[#B8941E] font-semibold"
-                  : "bg-[#FFFFFF] border-[#1A1515]/8 text-[#5C5854] hover:border-[#B8941E]/40 hover:text-[#1A1515]"
+                  ? "bg-[#C8A03B] text-black border-[#C8A03B] font-semibold"
+                  : "bg-card border-border text-muted-foreground hover:border-[#C8A03B]/40 hover:text-foreground"
               }`}
             >
               {cat.label}
@@ -112,7 +112,7 @@ function CatalogInner({ initialProducts, categories }) {
         })}
       </div>
 
-      <div className="flex items-center justify-between text-xs text-[#5C5854] mb-4">
+      <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
         <span data-testid="catalog-result-count">
           {filteredProducts.length} produit{filteredProducts.length > 1 ? "s" : ""} trouvé{filteredProducts.length > 1 ? "s" : ""}
         </span>
@@ -131,8 +131,8 @@ function CatalogInner({ initialProducts, categories }) {
             ))}
           </motion.div>
         ) : (
-          <div className="text-center py-20 text-[#5C5854]">
-            <p className="font-display text-2xl text-[#1A1515] mb-2">Aucun produit trouvé.</p>
+          <div className="text-center py-20 text-muted-foreground">
+            <p className="font-display text-2xl text-foreground mb-2">Aucun produit trouvé.</p>
             <p className="text-sm">Essaie une autre recherche ou catégorie.</p>
           </div>
         )}
@@ -143,14 +143,14 @@ function CatalogInner({ initialProducts, categories }) {
           <button
             onClick={() => setVisible((v) => Math.min(v + PAGE_SIZE, filteredProducts.length))}
             data-testid="catalog-load-more"
-            className="px-6 py-3 rounded-full bg-white border border-[#B8941E]/40 text-[#B8941E] hover:bg-[#B8941E]/8 transition-all text-sm font-semibold uppercase tracking-wider shadow-soft"
+            className="px-6 py-3 rounded-full bg-card border border-[#C8A03B]/40 text-[#C8A03B] hover:bg-[#C8A03B]/10 transition-all text-sm font-semibold uppercase tracking-wider shadow-soft"
           >
             Charger plus ({filteredProducts.length - visible} restant{filteredProducts.length - visible > 1 ? "s" : ""})
           </button>
         </div>
       )}
       {filteredProducts.length > 0 && visible >= filteredProducts.length && filteredProducts.length > PAGE_SIZE && (
-        <p className="text-center mt-8 text-sm text-[#8A857F]" data-testid="catalog-end">
+        <p className="text-center mt-8 text-sm text-muted-foreground" data-testid="catalog-end">
           Fin du catalogue.
         </p>
       )}

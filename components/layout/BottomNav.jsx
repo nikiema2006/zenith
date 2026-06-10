@@ -20,14 +20,14 @@ export default function BottomNav() {
       data-testid="bottom-nav"
       className="md:hidden fixed bottom-safe left-1/2 -translate-x-1/2 z-50"
     >
-      <div className="flex items-center gap-1 p-1.5 rounded-full bg-white/90 backdrop-blur-2xl border border-[#1A1515]/8 shadow-elev">
+      <div className="flex items-center gap-1 p-1.5 rounded-full glass-strong backdrop-blur-2xl border border-[#C8A03B]/20 shadow-elev">
         {TABS.map(({ to, label, icon: Icon, end, testid }) => {
           const isActive = end ? pathname === to : pathname.startsWith(to) && to !== "/";
           return (
             <Link key={to} href={to} data-testid={testid} className="relative">
               <div
                 className={`relative flex items-center gap-1.5 px-3.5 py-2.5 rounded-full transition-colors duration-200 ${
-                  isActive ? "text-white" : "text-[#5C5854] hover:text-[#1A1515]"
+                  isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {isActive && (

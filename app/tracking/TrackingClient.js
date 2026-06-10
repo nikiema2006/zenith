@@ -35,25 +35,25 @@ export default function TrackingClient() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-16">
       <div className="mb-8 md:mb-10">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-[#B8941E] mb-2">Tracking</p>
-        <h1 className="font-display text-3xl md:text-5xl text-[#1A1515]">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-[#C8A03B] mb-2">Tracking</p>
+        <h1 className="font-display text-3xl md:text-5xl text-foreground">
           Où est <span className="text-gold-gradient">ton colis ?</span>
         </h1>
-        <p className="text-sm md:text-base text-[#5C5854] mt-3 max-w-md">
+        <p className="text-sm md:text-base text-muted-foreground mt-3 max-w-md">
           Entre ton code de suivi (ex : CE2026A1) pour suivre ton expédition en temps réel.
         </p>
       </div>
 
       <form onSubmit={handleSearch} className="mb-10">
         <div className="relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5C5854]" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             data-testid="tracking-code-input"
             type="text"
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="Ex: CE2026A1"
-            className="w-full bg-[#FFFFFF] border border-[#B8941E]/15 rounded-lg pl-12 pr-32 py-4 text-sm tracking-widest uppercase text-[#1A1515] placeholder:text-[#8A857F] focus:border-[#B8941E]/50 focus:outline-none"
+            className="w-full bg-card border border-[#C8A03B]/15 rounded-lg pl-12 pr-32 py-4 text-sm tracking-widest uppercase text-foreground placeholder:text-muted-foreground focus:border-[#C8A03B]/50 focus:outline-none"
           />
           <button
             data-testid="tracking-search-btn"
