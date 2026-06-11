@@ -14,16 +14,25 @@ function truncate(text, max = 180) {
 }
 
 function buildOgImageUrl(product) {
-  // 1) Image OG PRINCIPALE : PREMIÈRE image produit (URL Supabase, déjà en prod — 100 % fiable)
-  //    C'est cette image qui sera affichée dans le partage WhatsApp/Facebook.
-  // 2) Image de fallback : logo.webp (image statique branding).
-  // NOTE : on préfère une image JPEG/WebP/PNG connue plutôt que du SVG (non supporté
-  // universellement par les crawlers des réseaux sociaux).
+  // La route /api/og génère systématiquement une carte 1200×630 (1.91:1),
+  // ce qui est le ratio que WhatsApp / Facebook interprètent comme "GRAND Aperçu".
+  // On lui passe l'image produit Supabase, le nom, le prix et la catégorie.
   const firstImage = product?.images?.[0];
-  if (firstImage && typeof firstImage === "string" && firstImage.startsWith("http")) {
-    return firstImage;
+  const params = new URLSearchParams();
+  params.set("title", String(product?.name || "Produit"));
+  if (product?.retail_price != null) {
+    // Format prix local
+    const priceFormatted = Number(product.retail_price)
+      .toLocaleString("fr-FR")
+      .replace(/\s/g, " ");
+    params.set("price", `${priceFormatted} FCFA`);
   }
-  return `${SITE_URL}/logo.webp`;
+  if (product?.category) params.set("category", String(product.category));
+  if (product?.badge) params.set("badge", String(product.badge));
+  if (firstImage && typeof firstImage === "string" && firstImage.startsWith("http")) {
+    params.set("image", firstImage);
+  }
+  return `${SITE_URL}/api/og?${params.toString()}`;
 }
 
 export async function generateMetadata({ params }) {
@@ -83,7 +92,7 @@ export async function generateMetadata({ params }) {
           width: 1200,
           height: 630,
           alt: product.name,
-          type: ogImage.endsWith(".png") ? "image/png" : "image/jpeg",
+          type: "image/png",
         },
       ],
     },
@@ -97,6 +106,7 @@ export async function generateMetadata({ params }) {
           width: 1200,
           height: 630,
           alt: product.name,
+          type: "image/png",
         },
       ],
     },

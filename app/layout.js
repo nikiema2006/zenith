@@ -51,11 +51,11 @@ export const metadata = {
     countryName: "Burkina Faso",
     images: [
       {
-        url: "/logo.webp",
+        url: "/api/og?title=Zenith%20Global&category=Importation%20Chine%20-%20Afrique",
         width: 1200,
         height: 630,
         alt: "Zenith Global — De Guanzhou à Ouaga, sans stress",
-        type: "image/webp",
+        type: "image/png",
       },
     ],
   },
@@ -67,10 +67,11 @@ export const metadata = {
     creator: "@zenithglobal",
     images: [
       {
-        url: "/logo.webp",
+        url: "/api/og?title=Zenith%20Global&category=Importation%20Chine%20-%20Afrique",
         width: 1200,
         height: 630,
         alt: "Zenith Global",
+        type: "image/png",
       },
     ],
   },
