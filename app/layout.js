@@ -16,79 +16,43 @@ export const metadata = {
     default: "Zenith Global — Importation Chine → Afrique",
     template: "%s · Zenith Global",
   },
-  description:
-    "Agent d'importation Chine → Afrique. Catalogue produits prix d'usine, calculateur de profit, suivi de colis. De Guanzhou à Ouaga, sans stress.",
-  keywords: [
-    "importation chine afrique",
-    "chinois produits",
-    "Guanzhou ouaga",
-    "grossiste chine",
-    "catalogue prix usine",
-    "achats groupés chine",
-    "importateur Burkina",
-    "shipping Guangzhou Ouaga",
-  ],
+  description: "Agent d'importation Chine → Afrique. Catalogue produits prix d'usine, calculateur de profit, suivi de colis. De Guanzhou à Ouaga, sans stress.",
+  keywords: ["importation chine afrique", "chinois produits", "Guanzhou ouaga", "grossiste chine"],
   authors: [{ name: "Zenith Global" }],
   creator: "Zenith Global",
   publisher: "Zenith Global",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-  ),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   alternates: {
     canonical: "/",
   },
-  category: "E-commerce",
-  classification: "Business",
-  applicationName: "Zenith Global",
   openGraph: {
     type: "website",
     locale: "fr_FR",
     url: "/",
     siteName: "Zenith Global",
     title: "Zenith Global — Importation Chine → Afrique",
-    description:
-      "Agent d'importation Chine → Afrique. Catalogue produits prix d'usine, calculateur de profit, suivi de colis. De Guanzhou à Ouaga, sans stress.",
-    countryName: "Burkina Faso",
+    description: "Agent d'importation Chine → Afrique. Catalogue produits prix d'usine, calculateur de profit, suivi de colis.",
     images: [
       {
-        url: "/api/og?title=Zenith%20Global&category=Importation%20Chine%20-%20Afrique",
+        url: "/images/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Zenith Global — De Guanzhou à Ouaga, sans stress",
-        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Zenith Global — Importation Chine → Afrique",
-    description:
-      "Agent d'importation Chine → Afrique. Catalogue produits prix d'usine, calculateur de profit, suivi de colis.",
-    creator: "@zenithglobal",
-    images: [
-      {
-        url: "/api/og?title=Zenith%20Global&category=Importation%20Chine%20-%20Afrique",
-        width: 1200,
-        height: 630,
-        alt: "Zenith Global",
-        type: "image/png",
-      },
-    ],
-  },
-  facebook: {
-    appId: process.env.NEXT_PUBLIC_FB_APP_ID || "",
+    description: "Agent d'importation Chine → Afrique. Catalogue produits prix d'usine, calculateur de profit, suivi de colis.",
+    images: ["/images/og-image.jpg"],
   },
   robots: {
     index: true,
     follow: true,
-    "max-image-preview": "large",
-    "max-snippet": -1,
     googleBot: {
       index: true,
       follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
     },
   },
   icons: {
@@ -96,7 +60,6 @@ export const metadata = {
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
-  manifest: "/site.webmanifest",
 };
 
 export const viewport = {

@@ -10,7 +10,7 @@ import ProductCard from "@/components/products/ProductCard";
 import ProductDetailSkeleton from "@/components/products/ProductDetailSkeleton";
 import VideoCarousel from "@/components/products/VideoCarousel";
 
-export default function ProductDetailClient({ product, related, productUrl, whatsappUrl }) {
+export default function ProductDetailClient({ product, related }) {
   const [activeImage, setActiveImage] = useState(0);
   const [loading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -19,17 +19,23 @@ export default function ProductDetailClient({ product, related, productUrl, what
     return <ProductDetailSkeleton />;
   }
 
-  // productUrl et whatsappUrl sont calculés CÔTÉ SERVEUR (app/produit/[slug]/page.js)
-  // et passés en props — ceci garantit que le HTML initial du SSR est strictement
-  // identique au premier rendu React côté client → pas d'hydration mismatch.
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const productUrl = `${siteUrl}/produit/${product.slug}`;
+  
+  const whatsappMessage = encodeURIComponent(
+    `Bonjour, je suis interesse par ce produit :\n\n` +
+    `Produit : ${product.name}\n` +
+    `Lien : ${productUrl}\n\n` +
+    `Prix detail : ${formatXOF(product.retailPrice)}\n` +
+    `Prix gros : ${formatXOF(product.wholesalePrice)} (des ${product.minWholesale} unites)\n\n` +
+    `Merci de me donner plus d'informations sur la commande.`
+  );
+  
+  const whatsappUrl = `https://wa.me/22607336700?text=${whatsappMessage}`;
 
   const handleCopyLink = async () => {
     try {
-      const absoluteUrl =
-        typeof window !== "undefined" && productUrl.startsWith("/")
-          ? `${window.location.origin}${productUrl}`
-          : productUrl;
-      await navigator.clipboard.writeText(absoluteUrl);
+      await navigator.clipboard.writeText(productUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
