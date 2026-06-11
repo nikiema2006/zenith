@@ -15,15 +15,16 @@ function truncate(text, max = 180) {
 
 function buildOgImageUrl(product) {
   // STRATÉGIE 2-chemins :
-  //   1) Si une image produit existe en URL absolue (Supabase) → on utilise
-  //      CETTE URL DIRECTEMENT comme og:image. Fichier statique → 100% fiable,
-  //      aucun fetch Edge, aucun plantage silencieux. WhatsApp/FB recadrent
-  //      automatiquement en grand format 1.91:1.
-  //   2) Sinon (pas d'image) → /api/og : carte branding 1200×630 en JSX PUR
-  //      (zéro balise <img> externe → zéro échec possible).
+  //   1) image produit Supabase disponible → /api/og-product?src=…
+  //      Télécharge l'image côté server Node.js, la redimensionne en
+  //      1200×630 EXACT (ratio 1.91:1), sert du JPEG.
+  //      → WhatsApp/FB reçoivent une image PAYSAGÉE → GRAND APERÇU.
+  //   2) pas d'image → /api/og : carte branding 1200×630 en JSX PUR.
   const firstImage = product?.images?.[0];
   if (firstImage && typeof firstImage === "string" && firstImage.startsWith("http")) {
-    return firstImage;
+    const params = new URLSearchParams();
+    params.set("src", firstImage);
+    return `${SITE_URL}/api/og-product?${params.toString()}`;
   }
   const params = new URLSearchParams();
   params.set("title", String(product?.name || "Produit"));
@@ -52,8 +53,10 @@ export async function generateMetadata({ params }) {
 
     const description = truncate(product.description, 200);
     const ogImage = buildOgImageUrl(product);
-    // Si og:image pointe sur /api/og → PNG généré. Sinon image JPG hébergée.
-    const ogImageType = ogImage.startsWith(SITE_URL + "/api/og")
+    // /api/og = carte branding PNG ; /api/og-product = JPEG 1200×630 redimensionnée.
+    const ogImageType = ogImage.startsWith(SITE_URL + "/api/og-product")
+      ? "image/jpeg"
+      : ogImage.startsWith(SITE_URL + "/api/og")
       ? "image/png"
       : "image/jpeg";
 
