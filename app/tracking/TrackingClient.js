@@ -122,7 +122,7 @@ export default function TrackingClient() {
         <div className="text-center py-12">
           <p className="text-sm text-[#8A857F]">
             Tu n&apos;as pas encore de code ? Contacte-nous sur{" "}
-            <a href="https://wa.me/22606900288" className="text-[#B8941E] hover:underline">
+            <a href="https://wa.me/22607336700" className="text-[#B8941E] hover:underline">
               WhatsApp
             </a>
             .

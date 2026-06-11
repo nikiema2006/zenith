@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { formatXOF } from "@/lib/format";
@@ -121,6 +121,11 @@ const AccordionItem = ({ item, isActive, onMouseEnter, index }) => {
 export function InteractiveImageAccordion({ slides = [] }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // Pour l'auto-défilement (gauche → droite, puis droite → gauche).
+  const directionRef = useRef(1); // 1 = ascendant / +1, -1 = descendant / -1
+  const userInteractingRef = useRef(false);
+  const resumeTimerRef = useRef(null);
+
   const items = slides.length
     ? slides
     : [
@@ -129,6 +134,50 @@ export function InteractiveImageAccordion({ slides = [] }) {
         { id: "f3", name: "Qualité contrôlée" },
         { id: "f4", name: "Expédition fiable" },
       ];
+
+  // Timer principal : toutes les 3 secondes, on avance d'un cran.
+  // Quand on atteint le dernier élément → on inverse la direction
+  // (ça redescend vers la gauche). Et inversement quand on revient
+  // sur le premier élément → on remonte.
+  useEffect(() => {
+    if (items.length <= 1) return;
+
+    const interval = setInterval(() => {
+      if (userInteractingRef.current) return; // freeze quand l'utilisateur survole
+      setActiveIndex((prev) => {
+        const next = prev + directionRef.current;
+        if (next > items.length - 1) {
+          directionRef.current = -1; // on redescend
+          return items.length - 1;
+        }
+        if (next <= 0) {
+          directionRef.current = 1; // on remonte
+          return 0;
+        }
+        return next;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [items.length]);
+
+  // Nettoie le timer de reprise à la fin.
+  useEffect(() => {
+    return () => {
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    };
+  }, []);
+
+  // Quand l'utilisateur survole / clique, on met en pause puis on
+  // reprend 2 secondes après la dernière interaction.
+  const handleUserTouch = useCallback((index) => {
+    userInteractingRef.current = true;
+    setActiveIndex(index);
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      userInteractingRef.current = false;
+    }, 2000);
+  }, []);
 
   return (
     <div
@@ -141,8 +190,8 @@ export function InteractiveImageAccordion({ slides = [] }) {
           item={item}
           index={index}
           isActive={index === activeIndex}
-          onMouseEnter={() => setActiveIndex(index)}
-          onClick={() => setActiveIndex(index)}
+          onMouseEnter={() => handleUserTouch(index)}
+          onClick={() => handleUserTouch(index)}
         />
       ))}
     </div>

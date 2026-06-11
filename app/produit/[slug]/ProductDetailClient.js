@@ -31,7 +31,7 @@ export default function ProductDetailClient({ product, related }) {
     `Merci de me donner plus d'informations sur la commande.`
   );
   
-  const whatsappUrl = `https://wa.me/22606900288?text=${whatsappMessage}`;
+  const whatsappUrl = `https://wa.me/22607336700?text=${whatsappMessage}`;
 
   const handleCopyLink = async () => {
     try {

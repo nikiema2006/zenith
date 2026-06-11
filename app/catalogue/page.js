@@ -5,6 +5,48 @@ import { getProducts, CATEGORIES } from "@/services/products";
 
 export const revalidate = 300;
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+export const metadata = {
+  title: "Catalogue · Produits prix d'usine Chine",
+  description:
+    "Catalogue complet China Express : tech, mode, maison, beauté, outils. Prix d'usine, livraison Guanzhou → Ouaga.",
+  keywords: [
+    "catalogue chine",
+    "prix usine",
+    "produits importation",
+    "tech mode maison beauté",
+    "achats groupés chine",
+    "revendeur Afrique",
+  ],
+  alternates: {
+    canonical: `${SITE_URL}/catalogue`,
+  },
+  openGraph: {
+    title: "Catalogue · China Express",
+    description:
+      "Catalogue complet China Express : tech, mode, maison, beauté, outils. Prix d'usine, livraison Guanzhou → Ouaga.",
+    url: `${SITE_URL}/catalogue`,
+    type: "website",
+    siteName: "China Express",
+    images: [
+      {
+        url: `${SITE_URL}/images/og-image.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "Catalogue China Express",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Catalogue · China Express",
+    description:
+      "Catalogue complet China Express : tech, mode, maison, beauté, outils. Prix d'usine.",
+    images: [`${SITE_URL}/images/og-image.jpg`],
+  },
+};
+
 function CatalogSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12">

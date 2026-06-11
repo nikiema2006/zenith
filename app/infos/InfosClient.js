@@ -119,7 +119,7 @@ export default function InfosClient({ initialFaqs, initialHowItWorks }) {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a
-            href="https://wa.me/22606900288"
+            href="https://wa.me/22607336700"
             target="_blank"
             rel="noopener noreferrer"
             data-testid="infos-whatsapp-cta"
@@ -128,11 +128,11 @@ export default function InfosClient({ initialFaqs, initialHowItWorks }) {
             <MessageCircle size={16} /> WhatsApp
           </a>
           <a
-            href="tel:+22606900288"
+            href="tel:+22607336700"
             data-testid="infos-call-cta"
             className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border border-[#B8941E] text-[#B8941E] rounded-md font-semibold hover:bg-[#B8941E]/10 transition-all text-sm uppercase tracking-wider"
           >
-            <Phone size={16} /> +226 06 90 02 88
+            <Phone size={16} /> +226 07 33 67 00
           </a>
           <a
             href="tel:+22607336700"

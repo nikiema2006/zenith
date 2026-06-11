@@ -16,7 +16,7 @@ export default function ProductCard({ product, index = 0 }) {
       <Link
         href={`/produit/${product.slug}`}
         data-testid={`product-card-${product.id}`}
-        className="group block relative overflow-hidden rounded-xl bg-card border border-border shadow-soft hover:border-[#C8A03B]/50 hover:shadow-elev transition-all duration-300"
+        className="group block relative overflow-hidden rounded-xl bg-card border border-gray-300 shadow-soft hover:border-[#C8A03B]/50 hover:shadow-elev transition-all duration-300"
       >
         <div className="relative aspect-[4/5] overflow-hidden bg-muted">
           <img

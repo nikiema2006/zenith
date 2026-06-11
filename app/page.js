@@ -80,7 +80,7 @@ export default async function Home() {
                 key={cat.id}
                 href={`/catalogue?cat=${cat.id}`}
                 data-testid={`home-category-desktop-${cat.id}`}
-                className="aspect-[3/2] rounded-xl bg-card border border-border flex flex-col items-center justify-center gap-2 hover:border-[#C8A03B]/60 hover:shadow-elev transition-all group"
+                className="aspect-[3/2] rounded-xl bg-card border border-gray-300 flex flex-col items-center justify-center gap-2 hover:border-[#C8A03B]/60 hover:shadow-elev transition-all group"
               >
                 <Icon size={26} className="text-[#C8A03B] group-hover:scale-110 transition-transform" strokeWidth={1.5} />
                 <span className="font-display text-base text-foreground">{cat.label}</span>
@@ -120,7 +120,7 @@ export default async function Home() {
           </div>
 
           <a
-            href="https://wa.me/22606900288"
+            href="https://wa.me/22607336700"
             target="_blank"
             rel="noopener noreferrer"
             data-testid="home-whatsapp-cta"
@@ -132,7 +132,7 @@ export default async function Home() {
               Envoie-nous le lien sur WhatsApp, on s&apos;occupe du reste : négociation, qualité, expédition.
             </p>
             <span className="inline-flex items-center gap-2 text-white font-medium text-sm group-hover:translate-x-1 transition-transform">
-              +226 06 90 02 88 <ArrowRight size={16} />
+              +226 07 33 67 00 <ArrowRight size={16} />
             </span>
           </a>
         </div>

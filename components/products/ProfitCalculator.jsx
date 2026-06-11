@@ -201,7 +201,7 @@ export default function ProfitCalculator({ product }) {
                   );
                 })}
               <a
-                href="https://wa.me/22606900288"
+                href="https://wa.me/22607336700"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#25D366] to-[#1FAA53] text-white rounded-md font-semibold text-sm"

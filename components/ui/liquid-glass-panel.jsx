@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -222,35 +222,43 @@ export function LiquidGlassPanel({
   const refractionId = useId().replace(/:/g, "");
   const specularId = useId().replace(/:/g, "");
 
-  // Généré une seule fois par rendu initial. Les props
-  // radius/bezel/thickness ne sont pas prévues comme dynamiques
-  // (sinon il faudrait un useEffect + setDataUrl).
+  // Pour éviter une hydration-mismatch entre SSR et client :
+  //   - SSR  : on n'a pas accès à `document` → pas de canvas → pas de
+  //            map de déplacement.
+  //   - 1er render client : idem que SSR → même HTML, React peut
+  //            hydrater.
+  //   - Une fois monté (useEffect), on génère les data URLs côté
+  //            client **seulement** et on ré-rend avec les filtres
+  //            avancés activés.
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Généré seulement après le montage client.
+  // En SSR / 1er render, on renvoie systématiquement ("", 0).
   const { displacementUrl, scale } = useMemo(() => {
-    if (typeof document === "undefined") {
-      return { displacementUrl: "", scale: 0 };
-    }
+    if (!isMounted) return { displacementUrl: "", scale: 0 };
     try {
       const { canvas, scale } = buildDisplacementMapCanvas(radius, bezel, thickness);
       return { displacementUrl: canvas.toDataURL("image/png"), scale };
     } catch {
       return { displacementUrl: "", scale: 0 };
     }
-  }, [radius, bezel, thickness]);
+  }, [isMounted, radius, bezel, thickness]);
 
   const specularDataUrl = useMemo(() => {
-    if (typeof document === "undefined") return "";
+    if (!isMounted) return "";
     try {
       return buildSpecularMapCanvas(bezel, 1.0).toDataURL("image/png");
     } catch {
       return "";
     }
-  }, [bezel, specular]);
+  }, [isMounted, bezel, specular]);
 
-  // Masque radial pour le progressive blur :
-  //   centre transparent (stop-opacity=0) → bord opaque (stop-opacity=1).
-  // feComposite operator="in" gardera strongBlur seulement sur les bords
-  // (où le masque est opaque), et operator="out" gardera baseBlur
-  // au centre.
+  // Masque radial pour le progressive blur.
+  // Construit à partir d'un <radialGradient> SVG inline :
+  //   centre transparent → bord opaque.
   const progressiveBlurMaskUrl = useMemo(() => {
     const svg =
       `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100' preserveAspectRatio='none'>` +

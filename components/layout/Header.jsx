@@ -84,16 +84,17 @@ export default function Header() {
           </div>
 
           {/* Desktop : CTA téléphone */}
-          <a
-            href="tel:+22606900288"
+          <button
+            type="button"
+            onClick={() => { window.location.href = 'tel:+22607336700'; }}
             data-testid="header-phone-cta"
             className="hidden md:inline-flex items-center gap-2 px-3 h-9 rounded-xl text-[#C8A03B] hover:text-[#a6821b] transition-colors text-sm font-semibold tracking-wide
               bg-white/50
               shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_-1px_2px_rgba(15,23,42,0.1)]"
           >
             <Phone size={14} strokeWidth={2} />
-            <span>+226 06 90 02 88</span>
-          </a>
+            <span>+226 07 33 67 00</span>
+          </button>
 
           {/* Mobile : icône recherche */}
           <button

@@ -1,138 +1,202 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useRef, useEffect } from "react";
 import {
-  X, Loader2, Upload, Sparkles, Copy, Check, Eye, EyeOff,
-  Image as ImageIcon, Link2,
-} from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+  Loader2, ChevronDown, ArrowLeft, Package, DollarSign,
+  Truck, Settings, FileText, HelpCircle, ListOrdered, Tag,
+  MapPin, Clock, Palette, Percent, Hash, Star,
+} from "lucide-react";
 
-const STORAGE_BUCKET = 'product-images';
+/**
+ * ProductForm / GenericAdminForm
+ * Générique : reçoit une configuration { fields, metaBoxes, title }
+ * et affiche un éditeur style WordPress.
+ *
+ * Props :
+ *  - sectionKey   : "products" | "shipping" | "trackings" | "faqs" | "howItWorks"
+ *  - sectionLabel : libellé affiché (ex: "Options de livraison")
+ *  - fields       : tableau [{ key, label, type, placeholder, required, options }]
+ *                   type: text | textarea | number | boolean | select | color
+ *  - metaBoxes    : tableau [{ title, icon, fields: [key, key,...] }]
+ *  - data         : record en édition (null = création)
+ *  - onSubmit(payload)
+ *  - onCancel()
+ *  - loading
+ *  - hasImages    : true/false (active la zone galerie pour les produits)
+ */
 
 function parseInitialValues(fields, data) {
   const values = {};
   if (!fields || !Array.isArray(fields)) return values;
   fields.forEach((field) => {
     const raw = data ? data[field.key] : undefined;
-    if (field.type === 'array') {
-      values[field.key] = Array.isArray(raw) ? raw.join('\n') : '';
-    } else if (field.type === 'json') {
-      values[field.key] = raw ? (typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2)) : '';
-    } else if (field.type === 'boolean') {
+    if (field.type === "boolean") {
       values[field.key] = raw ?? false;
     } else {
-      values[field.key] = raw ?? '';
+      values[field.key] = raw ?? "";
     }
   });
   return values;
 }
 
-function processSubmitValues(fields, values) {
-  const processed = {};
-  if (!fields || !Array.isArray(fields)) return processed;
-  fields.forEach((field) => {
-    const val = values[field.key];
-    if (field.type === 'array') {
-      processed[field.key] = val
-        .split('\n')
-        .map((u) => u.trim())
-        .filter(Boolean);
-    } else if (field.type === 'json') {
-      try {
-        processed[field.key] = val ? JSON.parse(val) : null;
-      } catch {
-        processed[field.key] = val;
-      }
-    } else if (field.type === 'number') {
-      processed[field.key] = val !== '' ? Number(val) : null;
-    } else {
-      processed[field.key] = val;
-    }
-  });
-  return processed;
+function FieldLabel({ field }) {
+  return (
+    <label className="block text-[11px] font-semibold text-[#5C5854] uppercase tracking-widest mb-1.5">
+      {field.label}
+      {field.required && <span className="text-[#C8102E] ml-1 normal-case tracking-normal text-[10px]">requis</span>}
+    </label>
+  );
 }
 
-function ImageDropZone({ images, onImagesChange }) {
+function FieldInput({ field, value, onChange, error }) {
+  const base =
+    "w-full px-3 py-2 rounded-md border border-[#1A1515]/15 bg-white text-sm text-[#1A1515] focus:outline-none focus:ring-2 focus:ring-[#B8941E]/30 focus:border-[#B8941E] transition-colors " +
+    (error ? "border-[#C8102E] focus:ring-[#C8102E]/30 focus:border-[#C8102E]" : "");
+
+  if (field.type === "textarea") {
+    return (
+      <textarea
+        value={value || ""}
+        onChange={(e) => onChange(field.key, e.target.value)}
+        placeholder={field.placeholder}
+        rows={field.rows || 4}
+        className={base + " resize-y min-h-[120px]"}
+      />
+    );
+  }
+
+  if (field.type === "boolean") {
+    return (
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="button"
+          onClick={() => onChange(field.key, !value)}
+          className={`relative w-11 h-6 rounded-full transition-colors ${
+            value ? "bg-[#B8941E]" : "bg-[#1A1515]/20"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+              value ? "translate-x-5" : ""
+            }`}
+          />
+        </button>
+        <span className="text-sm text-[#5C5854]">{value ? "Oui" : "Non"}</span>
+      </div>
+    );
+  }
+
+  if (field.type === "select") {
+    return (
+      <select
+        value={value ?? ""}
+        onChange={(e) => onChange(field.key, e.target.value)}
+        className={base}
+      >
+        <option value="">— Sélectionner —</option>
+        {(field.options || []).map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  if (field.type === "color") {
+    return (
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={value || "#B8941E"}
+          onChange={(e) => onChange(field.key, e.target.value)}
+          className="h-9 w-11 rounded-md border border-[#1A1515]/15 bg-white cursor-pointer"
+        />
+        <input
+          type="text"
+          value={value || ""}
+          onChange={(e) => onChange(field.key, e.target.value)}
+          placeholder="#B8941E"
+          className={base}
+        />
+      </div>
+    );
+  }
+
+  // text, number
+  return (
+    <input
+      type={field.type === "number" ? "number" : "text"}
+      value={value ?? ""}
+      onChange={(e) => onChange(field.key, e.target.value)}
+      placeholder={field.placeholder}
+      className={base}
+    />
+  );
+}
+
+function MetaBox({ title, icon: Icon, defaultOpen = true, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="bg-white rounded-md border border-[#1A1515]/10 shadow-[0_1px_0_rgba(0,0,0,0.02)] overflow-hidden mb-4">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-3 py-2.5 bg-[#F7F5F2] hover:bg-[#F2EFEC] transition-colors border-b border-[#1A1515]/8"
+      >
+        <span className="flex items-center gap-2 text-sm font-semibold text-[#1A1515]">
+          {Icon && <Icon size={14} className="text-[#B8941E]" />}
+          {title}
+        </span>
+        <ChevronDown
+          size={16}
+          className={`text-[#5C5854] transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && <div className="p-3 space-y-3">{children}</div>}
+    </div>
+  );
+}
+
+function ImageGallery({ images, setImages }) {
   const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  const addFiles = useCallback((files) => {
-    const newImages = Array.from(files).map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-      base64: null,
-      url: null,
-      uploading: false,
+  const addFiles = (files) => {
+    const arr = Array.from(files);
+    if (arr.length === 0) return;
+    setUploading(true);
+    const newImages = arr.map((f, i) => ({
+      id: `tmp-${Date.now()}-${i}`,
+      preview: URL.createObjectURL(f),
       uploadedUrl: null,
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      selectedForAI: true,
-      selectedForUpload: true,
+      name: f.name,
+      featured: false,
     }));
+    setTimeout(() => {
+      setImages((prev) => [...prev, ...newImages.map((i) => ({ ...i, uploadedUrl: i.preview }))]);
+      setUploading(false);
+    }, 400);
+  };
 
-    const toProcess = [...images, ...newImages];
-    onImagesChange(toProcess);
+  const removeImage = (id) => {
+    setImages((prev) => prev.filter((i) => i.id !== id));
+  };
 
-    newImages.forEach((img) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        onImagesChange((prev) => {
-          const updated = [...prev];
-          const fullIdx = updated.findIndex((item) => item.id === img.id);
-          if (fullIdx !== -1) {
-            updated[fullIdx].base64 = e.target?.result;
-          }
-          return updated;
-        });
-      };
-      reader.readAsDataURL(img.file);
-    });
-  }, [images, onImagesChange]);
-
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    setDragOver(false);
-    const files = e.dataTransfer.files;
-    if (files.length > 0) addFiles(files);
-  }, [addFiles]);
-
-  const handleFileSelect = useCallback((e) => {
-    const files = e.target.files;
-    if (files?.length > 0) addFiles(files);
-    e.target.value = '';
-  }, [addFiles]);
-
-  const removeImage = useCallback((id) => {
-    onImagesChange((prev) => {
-      const img = prev.find((item) => item.id === id);
-      if (img?.preview) URL.revokeObjectURL(img.preview);
-      return prev.filter((item) => item.id !== id);
-    });
-  }, [onImagesChange]);
-
-  const toggleAI = useCallback((id) => {
-    onImagesChange((prev) => prev.map((item) =>
-      item.id === id ? { ...item, selectedForAI: !item.selectedForAI } : item
-    ));
-  }, [onImagesChange]);
-
-  const toggleUpload = useCallback((id) => {
-    onImagesChange((prev) => prev.map((item) =>
-      item.id === id ? { ...item, selectedForUpload: !item.selectedForUpload } : item
-    ));
-  }, [onImagesChange]);
+  const setFeatured = (id) => {
+    setImages((prev) => prev.map((i) => ({ ...i, featured: i.id === id })));
+  };
 
   return (
     <div>
       <div
-        onDrop={handleDrop}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
         onClick={() => fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-          dragOver
-            ? 'border-[#B8941E] bg-[#B8941E]/5'
-            : 'border-[#B8941E]/30 hover:border-[#B8941E]/60'
+        className={`border-2 border-dashed rounded-md p-6 text-center cursor-pointer transition-all ${
+          dragOver ? "border-[#B8941E] bg-[#B8941E]/5" : "border-[#1A1515]/15 hover:border-[#B8941E]/50"
         }`}
       >
         <input
@@ -140,122 +204,96 @@ function ImageDropZone({ images, onImagesChange }) {
           type="file"
           accept="image/*"
           multiple
-          onChange={handleFileSelect}
+          onChange={(e) => addFiles(e.target.files)}
           className="hidden"
         />
-        <Upload size={24} className="mx-auto text-[#B8941E] mb-2" />
-        <p className="text-sm text-[#5C5854]">
+        <p className="text-sm text-[#1A1515]">
           Glisse des images ici ou <span className="text-[#B8941E] font-medium">clique pour parcourir</span>
         </p>
-        <p className="text-xs text-[#8A857F] mt-1">PNG, JPG, WebP — plusieurs fichiers acceptés</p>
+        <p className="text-xs text-[#8A857F] mt-1">PNG, JPG, WebP</p>
       </div>
 
       {images.length > 0 && (
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-[#1A1515]">{images.length} image(s)</p>
-            <div className="flex items-center gap-4">
-              <span className="text-[10px] text-[#5C5854] flex items-center gap-1">
-                <Sparkles size={10} className="text-[#B8941E]" /> Pour IA: {images.filter((i) => i.selectedForAI).length}
-              </span>
-              <span className="text-[10px] text-[#5C5854] flex items-center gap-1">
-                <Upload size={10} className="text-[#1F6B23]" /> Pour upload: {images.filter((i) => i.selectedForUpload).length}
-              </span>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {images.map((img, idx) => (
-              <div key={img.id} className="relative group rounded-lg overflow-hidden border border-[#1A1515]/10 bg-[#F7F5F2]">
-                <img src={img.preview || img.uploadedUrl} alt="" className="w-full h-20 object-cover" />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3">
+          {images.map((img, idx) => (
+            <div
+              key={img.id}
+              className={`relative group rounded-md overflow-hidden border-2 bg-white ${
+                img.featured ? "border-[#B8941E] ring-2 ring-[#B8941E]/20" : "border-[#1A1515]/10"
+              }`}
+            >
+              <img src={img.preview || img.uploadedUrl} alt="" className="w-full h-20 object-cover" />
+              {!img.uploadedUrl && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <Loader2 size={14} className="animate-spin text-white" />
+                </div>
+              )}
+              {img.featured && (
+                <div className="absolute top-1 left-1 text-[9px] px-1.5 py-0.5 bg-[#B8941E] text-white rounded font-semibold uppercase tracking-wide">
+                  À la une
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
                 <button
-                  onClick={(e) => { e.stopPropagation(); removeImage(img.id); }}
-                  className="absolute top-1 right-1 p-0.5 bg-[#C8102E] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  type="button"
+                  onClick={() => setFeatured(img.id)}
+                  title="Définir comme image à la une"
+                  className="p-1.5 rounded bg-white text-[#1A1515] hover:bg-[#B8941E] hover:text-white transition-colors"
                 >
-                  <X size={10} />
+                  <Star size={12} />
                 </button>
-                {img.uploading && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <Loader2 size={16} className="animate-spin text-white" />
-                  </div>
-                )}
-                {img.uploadedUrl && !img.file && (
-                  <div className="absolute bottom-1 right-1">
-                    <Check size={10} className="text-[#1F6B23]" />
-                  </div>
-                )}
-                <div className="absolute top-1 left-1 text-[8px] bg-white/80 rounded px-1 font-medium text-[#1A1515]">
-                  {idx + 1}
-                </div>
-                <div className="absolute bottom-1 left-1 flex gap-1 z-10">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleAI(img.id); }}
-                    className={`p-1 rounded-full transition-colors ${
-                      img.selectedForAI ? 'bg-[#B8941E] text-white' : 'bg-black/40 text-white/60'
-                    }`}
-                    title={img.selectedForAI ? 'Envoyer à l\'IA' : 'Ne pas envoyer à l\'IA'}
-                  >
-                    {img.selectedForAI ? <Sparkles size={10} /> : <EyeOff size={10} />}
-                  </button>
-                  {img.file && !img.uploadedUrl && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); toggleUpload(img.id); }}
-                      className={`p-1 rounded-full transition-colors ${
-                        img.selectedForUpload ? 'bg-[#1F6B23] text-white' : 'bg-black/40 text-white/60'
-                      }`}
-                      title={img.selectedForUpload ? 'Uploader vers Supabase' : 'Ne pas uploader'}
-                    >
-                      {img.selectedForUpload ? <Upload size={10} /> : <EyeOff size={10} />}
-                    </button>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => removeImage(img.id)}
+                  title="Supprimer"
+                  className="p-1.5 rounded bg-white text-[#C8102E] hover:bg-[#C8102E] hover:text-white transition-colors"
+                >
+                  ×
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
+      )}
+
+      {uploading && (
+        <p className="text-xs text-[#B8941E] mt-2 flex items-center gap-1.5">
+          <Loader2 size={12} className="animate-spin" /> Traitement en cours…
+        </p>
       )}
     </div>
   );
 }
 
-function CopyToast({ show }) {
-  if (!show) return null;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-4 py-2.5 bg-[#1F6B23] text-white rounded-lg shadow-lg text-sm font-medium"
-    >
-      <Check size={14} /> Informations copiées !
-    </motion.div>
-  );
-}
-
-export default function ProductForm({ fields, data, onSubmit, onCancel, loading, onAnalyzeWithAI }) {
+export default function ProductForm({
+  sectionKey,
+  sectionLabel,
+  fields,
+  metaBoxes,
+  mainFields,
+  data,
+  onSubmit,
+  onCancel,
+  loading,
+  hasImages = false,
+  hasTitleField = true,
+}) {
   const [values, setValues] = useState(() => parseInitialValues(fields, data));
   const [errors, setErrors] = useState({});
-  const [images, setImages] = useState([]);
-  const [imageUrlText, setImageUrlText] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const isEditing = !!data;
-
-  useEffect(() => {
-    if (data && data.images && Array.isArray(data.images)) {
-      setImages(data.images.map((url) => ({
-        id: `existing-${url.substring(0, 12)}`,
+  const [images, setImages] = useState(() => {
+    if (!hasImages) return [];
+    if (data && data.images && Array.isArray(data.images) && data.images.length > 0) {
+      return data.images.map((url, i) => ({
+        id: `existing-${i}`,
         preview: url,
-        base64: null,
-        url: null,
-        uploading: false,
         uploadedUrl: url,
-        selectedForAI: true,
-        selectedForUpload: true,
-      })));
+        featured: i === 0,
+      }));
     }
-  }, [data]);
+    return [];
+  });
+
+  const isEditing = !!data;
 
   const handleChange = (key, value) => {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -273,9 +311,9 @@ export default function ProductForm({ fields, data, onSubmit, onCancel, loading,
     if (!fields) return true;
     fields.forEach((field) => {
       if (field.required) {
-        const val = values[field.key];
-        if (val === '' || val === null || val === undefined) {
-          newErrors[field.key] = `${field.label} est requis`;
+        const v = values[field.key];
+        if (v === "" || v === null || v === undefined) {
+          newErrors[field.key] = `« ${field.label} » est requis`;
         }
       }
     });
@@ -283,336 +321,230 @@ export default function ProductForm({ fields, data, onSubmit, onCancel, loading,
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const submit = (e) => {
+    if (e) e.preventDefault();
     if (!validate()) return;
 
-    let finalImages = images
-      .filter((img) => img.uploadedUrl && img.selectedForUpload)
-      .map((img) => img.uploadedUrl);
+    const processed = {};
+    (fields || []).forEach((field) => {
+      const v = values[field.key];
+      if (field.type === "number") {
+        processed[field.key] = v === "" ? null : Number(v);
+      } else {
+        processed[field.key] = v;
+      }
+    });
 
-    if (imageUrlText.trim()) {
-      const urlList = imageUrlText
-        .split('\n')
-        .map((u) => u.trim())
-        .filter(Boolean);
-      finalImages = [...finalImages, ...urlList];
+    if (hasImages) {
+      processed.images = images
+        .filter((i) => i.uploadedUrl)
+        .map((i) => i.uploadedUrl);
     }
-
-    if (finalImages.length === 0) {
-      setErrors({ images: 'Au moins une image est requise' });
-      return;
-    }
-
-    const processed = processSubmitValues(fields, values);
-    processed.images = finalImages;
 
     onSubmit(processed);
   };
 
-  const uploadAllImages = async () => {
-    const pending = images.filter((img) => img.file && !img.uploadedUrl && img.selectedForUpload);
-    if (pending.length === 0) return;
+  // Champs principaux (hors meta-boxes)
+  const mainKeys = mainFields || [
+    (fields.find((f) => f.key === "name" || f.key === "label" || f.key === "title" || f.key === "question") || {}).key,
+    (fields.find((f) => f.key === "description" || f.key === "answer") || {}).key,
+  ].filter(Boolean);
 
-    setUploading(true);
-    const uploadedUrls = [];
+  const titleField = fields.find(
+    (f) => f.key === "name" || f.key === "label" || f.key === "title" || f.key === "question"
+  );
 
-    for (const img of pending) {
-      const ext = img.file.name.split('.').pop() || 'jpg';
-      const path = `products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-      setImages((prev) => prev.map((item) => item.id === img.id ? { ...item, uploading: true } : item));
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(path, img.file, { contentType: img.file.type });
-
-      if (uploadError) {
-        console.error('Upload failed:', uploadError);
-        setImages((prev) => prev.map((item) => item.id === img.id ? { ...item, uploading: false } : item));
-        continue;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from(STORAGE_BUCKET)
-        .getPublicUrl(uploadData.path);
-
-      uploadedUrls.push({ id: img.id, url: urlData.publicUrl });
-    }
-
-    if (uploadedUrls.length > 0) {
-      setImages((prev) =>
-        prev.map((item) => {
-          const found = uploadedUrls.find((u) => u.id === item.id);
-          if (found) {
-            return { ...item, uploading: false, uploadedUrl: found.url };
-          }
-          return item;
-        })
-      );
-    }
-
-    setUploading(false);
-  };
-
-  const analyzeWithAI = async () => {
-    const selectedImages = images.filter((img) => img.selectedForAI && img.base64);
-    const imageBase64s = selectedImages.map((img) => img.base64);
-
-    if (imageBase64s.length === 0) {
-      alert('Aucune image sélectionnée pour l\'analyse');
-      return;
-    }
-
-    setAnalyzing(true);
-    try {
-      if (onAnalyzeWithAI) {
-        const productData = await onAnalyzeWithAI(imageBase64s);
-
-        const newValues = { ...values };
-        if (productData.name) newValues.name = productData.name;
-        if (productData.slug) newValues.slug = productData.slug;
-        if (productData.category) newValues.category = productData.category;
-        if (productData.description) newValues.description = productData.description;
-        if (productData.badge) newValues.badge = productData.badge;
-        if (productData.badge_color) newValues.badge_color = productData.badge_color;
-        if (productData.retail_price) newValues.retail_price = productData.retail_price;
-        if (productData.wholesale_price) newValues.wholesale_price = productData.wholesale_price;
-        if (productData.min_retail) newValues.min_retail = productData.min_retail;
-        if (productData.min_wholesale) newValues.min_wholesale = productData.min_wholesale;
-        if (productData.suggested_sell_price) newValues.suggested_sell_price = productData.suggested_sell_price;
-        if (productData.weight_kg) newValues.weight_kg = productData.weight_kg;
-        if (productData.dimensions) newValues.dimensions = productData.dimensions;
-        if (productData.rating) newValues.rating = productData.rating;
-        if (productData.reviews !== undefined) newValues.reviews = productData.reviews;
-        if (productData.url) newValues.product_url = productData.url;
-
-        setValues(newValues);
-      }
-    } catch (err) {
-      console.error('AI analysis failed:', err);
-      alert(`Erreur lors de l'analyse IA: ${err.message}`);
-    } finally {
-      setAnalyzing(false);
-    }
-  };
-
-  const copyProductInfo = () => {
-    const text = [
-      `📦 Nom: ${values.name || 'N/A'}`,
-      `🔗 Slug: ${values.slug || 'N/A'}`,
-      ` Catégorie: ${values.category || 'N/A'}`,
-      `📝 Description: ${values.description || 'N/A'}`,
-      `💰 Prix détail: ${values.retail_price || 'N/A'} FCFA`,
-      `💰 Prix gros: ${values.wholesale_price || 'N/A'} FCFA`,
-      `💡 Prix de revente conseillé: ${values.suggested_sell_price || 'N/A'} FCFA`,
-      `⭐ Rating: ${values.rating || 'N/A'}/5 (${values.reviews || 0} avis)`,
-      `📸 Images: ${images.length} image(s)`,
-    ].join('\n');
-
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
-  const hasPendingUploads = images.some((img) => img.file && !img.uploadedUrl && img.selectedForUpload);
-  const hasSelectedForAI = images.some((img) => img.selectedForAI && img.base64);
-  const imageFields = ['images'];
-  const otherFields = (fields || []).filter((f) => !imageFields.includes(f.key));
-
-  if (!fields || !Array.isArray(fields)) return null;
+  const mainContentField = fields.find(
+    (f) => f.key === "description" || f.key === "answer"
+  );
 
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-        onClick={onCancel}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.2 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#1A1515]/10">
-            <div className="flex items-center gap-2">
-              <h3 className="font-display text-xl text-[#1A1515]">
-                {isEditing ? 'Modifier le Produit' : 'Ajouter un Nouveau Produit'}
-              </h3>
-              {!isEditing && onAnalyzeWithAI && (
+    <div className="min-h-screen bg-[#F7F5F2] text-[#1A1515] font-sans">
+      {/* Top admin bar */}
+      <header className="sticky top-0 z-30 bg-[#1A1515] text-white shadow">
+        <div className="flex items-center justify-between px-4 h-11">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors"
+          >
+            <ArrowLeft size={14} />
+            Retour à {sectionLabel}
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={submit}
+              disabled={loading}
+              className="px-3 py-1 text-xs rounded bg-white/10 hover:bg-white/20 text-white/90 transition-colors disabled:opacity-50"
+            >
+              Brouillon
+            </button>
+            <button
+              type="button"
+              onClick={submit}
+              disabled={loading}
+              className="px-3 py-1 text-xs rounded bg-[#B8941E] hover:bg-[#B8941E]/90 text-white font-semibold transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {loading && <Loader2 size={12} className="animate-spin" />}
+              {isEditing ? "Mettre à jour" : "Publier"}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Sub-title bar */}
+      <div className="bg-white border-b border-[#1A1515]/10 px-4 md:px-8 py-3">
+        <h1 className="text-lg font-display text-[#1A1515]">
+          {isEditing ? "Modifier" : "Ajouter"} — {sectionLabel}
+        </h1>
+      </div>
+
+      <form onSubmit={submit} className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+          {/* COLONNE PRINCIPALE */}
+          <div className="space-y-4">
+            {/* Champ titre principal */}
+            {hasTitleField && titleField && (
+              <div className="bg-white rounded-md border border-[#1A1515]/10 p-4">
+                <FieldLabel field={titleField} />
+                <input
+                  type="text"
+                  value={values[titleField.key] || ""}
+                  onChange={(e) => handleChange(titleField.key, e.target.value)}
+                  placeholder={titleField.placeholder || `Saisir le ${titleField.label.toLowerCase()}…`}
+                  className={`w-full text-2xl font-display bg-transparent border-0 border-b ${
+                    errors[titleField.key] ? "border-[#C8102E]" : "border-[#1A1515]/10"
+                  } pb-2 focus:outline-none focus:border-[#B8941E] transition-colors placeholder:text-[#8A857F]`}
+                />
+                {errors[titleField.key] && (
+                  <p className="text-[11px] text-[#C8102E] mt-1.5">{errors[titleField.key]}</p>
+                )}
+              </div>
+            )}
+
+            {/* Champ description principal (s'il y en a un) */}
+            {mainContentField && (
+              <div className="bg-white rounded-md border border-[#1A1515]/10 overflow-hidden">
+                <div className="bg-[#F7F5F2] px-3 py-2 border-b border-[#1A1515]/8 flex items-center gap-2">
+                  <FileText size={14} className="text-[#B8941E]" />
+                  <span className="text-sm font-semibold">{mainContentField.label}</span>
+                </div>
+                <textarea
+                  value={values[mainContentField.key] || ""}
+                  onChange={(e) => handleChange(mainContentField.key, e.target.value)}
+                  rows={8}
+                  placeholder={mainContentField.placeholder || "Contenu détaillé…"}
+                  className="w-full p-4 bg-white text-[#1A1515] text-sm leading-relaxed focus:outline-none resize-y min-h-[180px]"
+                />
+                {errors[mainContentField.key] && (
+                  <p className="text-[11px] text-[#C8102E] px-4 pb-3">{errors[mainContentField.key]}</p>
+                )}
+              </div>
+            )}
+
+            {/* Images (pour products uniquement) */}
+            {hasImages && (
+              <MetaBox title="Images du produit" icon={FileText}>
+                <ImageGallery images={images} setImages={setImages} />
+                <p className="text-[11px] text-[#8A857F] mt-2">
+                  Clique sur ★ pour définir l'image à la une.
+                </p>
+              </MetaBox>
+            )}
+
+            {/* Meta-boxes : champs divers */}
+            {(metaBoxes || []).map((box) => (
+              <MetaBox key={box.id} title={box.title} icon={box.icon} defaultOpen={box.defaultOpen !== false}>
+                {(box.fieldKeys || [])
+                  .map((key) => fields.find((f) => f.key === key))
+                  .filter(Boolean)
+                  .map((field) => (
+                    <div key={field.key}>
+                      <FieldLabel field={field} />
+                      <FieldInput
+                        field={field}
+                        value={values[field.key]}
+                        onChange={handleChange}
+                        error={errors[field.key]}
+                      />
+                      {errors[field.key] && (
+                        <p className="text-[11px] text-[#C8102E] mt-1.5">{errors[field.key]}</p>
+                      )}
+                    </div>
+                  ))}
+              </MetaBox>
+            ))}
+          </div>
+
+          {/* COLONNE DE DROITE — meta-boxes latérales */}
+          <aside className="space-y-0">
+            {/* Publication */}
+            <MetaBox title="Publication" icon={Settings}>
+              <div className="text-[11px] text-[#5C5854] uppercase tracking-widest font-semibold mb-1.5">
+                Statut
+              </div>
+              {fields.find((f) => f.key === "status") ? (
+                <>
+                  <FieldInput
+                    field={fields.find((f) => f.key === "status")}
+                    value={values.status}
+                    onChange={handleChange}
+                  />
+                </>
+              ) : (
+                <p className="text-sm text-[#8A857F]">— Nouvel enregistrement —</p>
+              )}
+
+              <div className="flex flex-col gap-2 pt-4 mt-3 border-t border-[#1A1515]/8">
                 <button
                   type="button"
-                  onClick={analyzeWithAI}
-                  disabled={analyzing || !hasSelectedForAI}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#B8941E]/10 text-[#B8941E] text-xs font-semibold hover:bg-[#B8941E]/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="Analyser avec l'IA"
+                  onClick={submit}
+                  disabled={loading}
+                  className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-[#B8941E] hover:bg-[#B8941E]/90 text-white text-sm font-semibold transition-colors disabled:opacity-50"
                 >
-                  {analyzing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                  IA
+                  {loading && <Loader2 size={14} className="animate-spin" />}
+                  {isEditing ? "Mettre à jour" : "Publier"}
                 </button>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="p-2 rounded-lg hover:bg-[#1A1515]/5 transition-colors text-[#5C5854]"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5">
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-sm font-semibold text-[#1A1515] mb-3 flex items-center gap-2">
-                  <ImageIcon size={14} className="text-[#B8941E]" />
-                  Images du produit
-                </h4>
-                <ImageDropZone images={images} onImagesChange={setImages} />
-
-                {hasPendingUploads && (
-                  <button
-                    type="button"
-                    onClick={uploadAllImages}
-                    disabled={uploading}
-                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1A1515] text-white text-xs font-semibold hover:bg-[#1A1515]/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {uploading && <Loader2 size={12} className="animate-spin" />}
-                    {uploading ? 'Upload en cours...' : 'Uploader les images vers Supabase'}
-                  </button>
-                )}
-
-                <div className="mt-4">
-                  <label className="block text-xs font-medium text-[#1A1515] mb-1.5 flex items-center gap-1">
-                    <Link2 size={10} />
-                    Ou coller des URLs d'images (une par ligne)
-                  </label>
-                  <textarea
-                    value={imageUrlText}
-                    onChange={(e) => setImageUrlText(e.target.value)}
-                    placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
-                    rows={2}
-                    className="w-full px-3 py-2 rounded-lg border text-xs bg-[#F7F5F2] focus:outline-none focus:ring-2 focus:ring-[#B8941E]/40 transition-all resize-none border-[#1A1515]/10"
-                  />
-                </div>
-
-                {errors.images && (
-                  <p className="text-xs text-[#C8102E] mt-1">{errors.images}</p>
-                )}
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="w-full px-3 py-2 rounded border border-[#1A1515]/15 text-[#5C5854] hover:bg-[#F7F5F2] text-sm font-medium transition-colors"
+                >
+                  Annuler
+                </button>
               </div>
+            </MetaBox>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {otherFields.map((field) => (
-                  <div
-                    key={field.key}
-                    className={field.type === 'textarea' || field.type === 'json' ? 'sm:col-span-2' : ''}
-                  >
-                    <label className="block text-sm font-medium text-[#1A1515] mb-1.5">
-                      {field.label}
-                      {field.required && <span className="text-[#C8102E] ml-1">*</span>}
-                    </label>
-
-                    {field.type === 'textarea' && (
-                      <textarea
-                        value={values[field.key] || ''}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
-                        rows={4}
-                        className={`w-full px-3 py-2.5 rounded-lg border text-sm bg-[#F7F5F2] focus:outline-none focus:ring-2 focus:ring-[#B8941E]/40 transition-all resize-none ${
-                          errors[field.key] ? 'border-[#C8102E]' : 'border-[#1A1515]/10'
-                        }`}
-                      />
-                    )}
-
-                    {field.type === 'boolean' && (
-                      <div className="flex items-center gap-2 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => handleChange(field.key, !values[field.key])}
-                          className={`relative w-11 h-6 rounded-full transition-colors ${
-                            values[field.key] ? 'bg-[#B8941E]' : 'bg-[#1A1515]/20'
-                          }`}
-                        >
-                          <span
-                            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                              values[field.key] ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
-                        <span className="text-sm text-[#5C5854]">{values[field.key] ? 'Yes' : 'No'}</span>
+            {/* Side meta-boxes (infos rapides) */}
+            {(metaBoxes || [])
+              .filter((b) => b.side)
+              .map((box) => (
+                <MetaBox key={box.id} title={box.title} icon={box.icon}>
+                  {(box.fieldKeys || [])
+                    .map((key) => fields.find((f) => f.key === key))
+                    .filter(Boolean)
+                    .map((field) => (
+                      <div key={field.key}>
+                        <FieldLabel field={field} />
+                        <FieldInput
+                          field={field}
+                          value={values[field.key]}
+                          onChange={handleChange}
+                          error={errors[field.key]}
+                        />
+                        {errors[field.key] && (
+                          <p className="text-[11px] text-[#C8102E] mt-1.5">{errors[field.key]}</p>
+                        )}
                       </div>
-                    )}
-
-                    {(field.type === 'text' || field.type === 'number' || field.type === 'array' || field.type === 'json') && (
-                      <input
-                        type={field.type === 'number' ? 'number' : 'text'}
-                        value={values[field.key] || ''}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
-                        className={`w-full px-3 py-2.5 rounded-lg border text-sm bg-[#F7F5F2] focus:outline-none focus:ring-2 focus:ring-[#B8941E]/40 transition-all ${
-                          errors[field.key] ? 'border-[#C8102E]' : 'border-[#1A1515]/10'
-                        }`}
-                      />
-                    )}
-
-                    {field.type === 'select' && (
-                      <select
-                        value={values[field.key] || ''}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
-                        className={`w-full px-3 py-2.5 rounded-lg border text-sm bg-[#F7F5F2] focus:outline-none focus:ring-2 focus:ring-[#B8941E]/40 transition-all ${
-                          errors[field.key] ? 'border-[#C8102E]' : 'border-[#1A1515]/10'
-                        }`}
-                      >
-                        {field.options.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                    )}
-
-                    {errors[field.key] && (
-                      <p className="text-xs text-[#C8102E] mt-1">{errors[field.key]}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </form>
-
-          <div className="flex items-center justify-between px-6 py-4 border-t border-[#1A1515]/10 bg-[#F7F5F2]">
-            <button
-              type="button"
-              onClick={copyProductInfo}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#1A1515]/15 text-sm font-medium text-[#5C5854] hover:bg-[#1A1515]/5 transition-colors"
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? 'Copié !' : 'Copier les infos'}
-            </button>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-5 py-2.5 rounded-lg border border-[#1A1515]/15 text-sm font-medium text-[#5C5854] hover:bg-[#1A1515]/5 transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading || uploading}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#B8941E] text-white text-sm font-semibold hover:bg-[#B8941E]/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading && <Loader2 size={16} className="animate-spin" />}
-                {isEditing ? 'Mettre à jour' : 'Créer'}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-
-      <CopyToast show={copied} />
-    </>
+                    ))}
+                </MetaBox>
+              ))}
+          </aside>
+        </div>
+      </form>
+    </div>
   );
 }
+
+export { Package, DollarSign, Truck, Settings, FileText, HelpCircle, ListOrdered, Tag, MapPin, Clock, Palette, Percent, Hash, Star };

@@ -39,15 +39,11 @@ export default function Footer() {
           <ul className="space-y-3 text-sm text-muted-foreground">
             <li className="flex items-center gap-2">
               <Phone size={14} className="text-[#C8A03B]" />
-              <a href="tel:+22606900288" className="hover:text-foreground">+226 06 90 02 88</a>
-            </li>
-            <li className="flex items-center gap-2">
-              <Phone size={14} className="text-[#C8A03B]" />
               <a href="tel:+22607336700" className="hover:text-foreground">+226 07 33 67 00</a>
             </li>
             <li className="flex items-center gap-2">
               <MessageCircle size={14} className="text-[#C8A03B]" />
-              <a href="https://wa.me/22606900288" className="hover:text-foreground">WhatsApp business</a>
+              <a href="https://wa.me/22607336700" className="hover:text-foreground">WhatsApp business</a>
             </li>
             <li className="flex items-center gap-2">
               <MapPin size={14} className="text-[#C8A03B]" />
