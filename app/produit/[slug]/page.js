@@ -14,14 +14,20 @@ function truncate(text, max = 180) {
 }
 
 function buildOgImageUrl(product) {
-  // La route /api/og génère systématiquement une carte 1200×630 (1.91:1),
-  // ce qui est le ratio que WhatsApp / Facebook interprètent comme "GRAND Aperçu".
-  // On lui passe l'image produit Supabase, le nom, le prix et la catégorie.
+  // STRATÉGIE 2-chemins :
+  //   1) Si une image produit existe en URL absolue (Supabase) → on utilise
+  //      CETTE URL DIRECTEMENT comme og:image. Fichier statique → 100% fiable,
+  //      aucun fetch Edge, aucun plantage silencieux. WhatsApp/FB recadrent
+  //      automatiquement en grand format 1.91:1.
+  //   2) Sinon (pas d'image) → /api/og : carte branding 1200×630 en JSX PUR
+  //      (zéro balise <img> externe → zéro échec possible).
   const firstImage = product?.images?.[0];
+  if (firstImage && typeof firstImage === "string" && firstImage.startsWith("http")) {
+    return firstImage;
+  }
   const params = new URLSearchParams();
   params.set("title", String(product?.name || "Produit"));
   if (product?.retail_price != null) {
-    // Format prix local
     const priceFormatted = Number(product.retail_price)
       .toLocaleString("fr-FR")
       .replace(/\s/g, " ");
@@ -29,9 +35,6 @@ function buildOgImageUrl(product) {
   }
   if (product?.category) params.set("category", String(product.category));
   if (product?.badge) params.set("badge", String(product.badge));
-  if (firstImage && typeof firstImage === "string" && firstImage.startsWith("http")) {
-    params.set("image", firstImage);
-  }
   return `${SITE_URL}/api/og?${params.toString()}`;
 }
 
@@ -48,7 +51,11 @@ export async function generateMetadata({ params }) {
     }
 
     const description = truncate(product.description, 200);
-  const ogImage = buildOgImageUrl(product);
+    const ogImage = buildOgImageUrl(product);
+    // Si og:image pointe sur /api/og → PNG généré. Sinon image JPG hébergée.
+    const ogImageType = ogImage.startsWith(SITE_URL + "/api/og")
+      ? "image/png"
+      : "image/jpeg";
 
   return {
     title: `${product.name}${product.badge ? " · " + product.badge : ""} · China Express`,
@@ -65,9 +72,6 @@ export async function generateMetadata({ params }) {
     alternates: {
       canonical: `${SITE_URL}/produit/${slug}`,
     },
-    // next/head : meta tags standards; on utilise "website" (valeur reconnue par Next.js 16)
-    // et on ajoute manuellement og:type=product + og:price* via l'objet "other"
-    // (qui devient <meta name="" content="">). Les "product:*" sont aussi ajoutés en other.
     other: {
       "og:type": "product",
       ...(product.retail_price
@@ -92,7 +96,7 @@ export async function generateMetadata({ params }) {
           width: 1200,
           height: 630,
           alt: product.name,
-          type: "image/png",
+          type: ogImageType,
         },
       ],
     },
@@ -106,7 +110,7 @@ export async function generateMetadata({ params }) {
           width: 1200,
           height: 630,
           alt: product.name,
-          type: "image/png",
+          type: ogImageType,
         },
       ],
     },

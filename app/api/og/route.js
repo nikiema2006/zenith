@@ -7,69 +7,52 @@ export const size = {
   height: 630,
 };
 
-// Route /api/og — Génère systématiquement une carte 1200×630 (1.91:1).
-// C'est LE ratio que WhatsApp / Facebook / LinkedIn interprètent comme
-// "grand aperçu" (preview rectangulaire).
+// Route /api/og — génère une carte branding 1200×630 (1.91:1).
+// C'est le ratio que WhatsApp / Facebook interprètent comme "grand aperçu".
+//
+// RÈGLE D'OR (jamais plus de plantage silencieux) :
+//   → AUCUNE balise <img src="https://..."> dans le JSX rendu.
+//   Les <img> externes demandent à ImageResponse de fetch l'image en bytes,
+//   ce qui échoue silencieusement en Edge Runtime (rate-limit Supabase, CORS,
+//   temps de chargement…). Le crawler reçoit alors 0 octet → plus d'aperçu.
+//   On garde donc du 100 % typographie + formes vectorielles.
 //
 // Paramètres :
-//   ?title=…         — nom du produit (obligatoire pour un bon rendu)
-//   &price=…         — prix (affiché en grand, ex: "12 500 FCFA")
-//   &category=…      — catégorie (affichée en petit en haut)
-//   &image=https://…  — URL de la 1ère image du produit (affichée en grand à gauche)
-//   &badge=…         — badge optionnel (ex: "TOP VENTE")
+//   ?title=…       — nom du produit ou "Zenith Global"
+//   &price=…       — prix affiché en grand à droite ("12 500 FCFA")
+//   &category=…    — catégorie en petit doré en haut
+//   &badge=…       — badge optionnel rouge ("TOP VENTE")
 //
 // Exemple :
-//   /api/og?title=Lunettes%20Polarisées&price=12%20500%20FCFA&category=Mode&image=https://…supabase.co/…/lunettes.jpg
-//
-// Notes sur le rendu :
-//  - Fond : dégradé noir → rouge foncé (identité China Express)
-//  - Image produit à gauche en grand (500×500 avec coins arrondis)
-//  - Titre + prix à droite (force le ratio 1.91:1)
-//  - Si `image` n'est pas fournie ou échoue, on affiche le logo "Z" en grand à gauche
-//  - Toutes les tailles sont en pixels = pixels relatifs <svg>/<img> standards
-function isValidHttpUrl(str) {
-  if (!str) return false;
-  try {
-    const u = new URL(str);
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch {
-    return false;
+//   /api/og?title=Lunettes%20Polarisées&price=12%20500%20FCFA&category=Mode&badge=TOP%20VENTE
+
+function splitWords(text, maxCharsPerLine) {
+  const words = (text || "").split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = "";
+  for (const w of words) {
+    if ((current + " " + w).trim().length > maxCharsPerLine) {
+      if (current) lines.push(current.trim());
+      current = w;
+    } else {
+      current = current ? current + " " + w : w;
+    }
   }
+  if (current) lines.push(current.trim());
+  return lines.slice(0, 3);
 }
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
-  const title = (searchParams.get("title") || "China Express").slice(0, 80);
+  const title = (searchParams.get("title") || "Zenith Global").slice(0, 120);
   const price = (searchParams.get("price") || "").slice(0, 40);
-  const category = (searchParams.get("category") || "Importation Chine → Afrique").slice(0, 60);
-  const image = searchParams.get("image");
+  const category = (
+    searchParams.get("category") || "Importation Chine → Afrique"
+  ).slice(0, 80);
   const badge = (searchParams.get("badge") || "").slice(0, 30);
 
-  const hasImage = isValidHttpUrl(image);
-
-  // Titre multi-lignes si long
-  const titleLines = [];
-  const maxPerLine = 28;
-  if (title.length <= maxPerLine) {
-    titleLines.push(title);
-  } else {
-    const words = title.split(" ");
-    let current = "";
-    for (const w of words) {
-      if ((current + " " + w).trim().length > maxPerLine) {
-        titleLines.push(current.trim());
-        current = w;
-      } else {
-        current = current ? current + " " + w : w;
-      }
-    }
-    if (current) titleLines.push(current.trim());
-    if (titleLines.length > 3) {
-      // On tronque la 3e ligne et on ajoute "…"
-      titleLines[2] = titleLines.slice(2).join(" ").slice(0, maxPerLine).trimEnd() + "…";
-      titleLines.length = 3;
-    }
-  }
+  const titleLines = splitWords(title, 26);
+  const priceLines = splitWords(price, 24);
 
   return new ImageResponse(
     (
@@ -79,81 +62,80 @@ export async function GET(req) {
           height: "100%",
           display: "flex",
           background:
-            "linear-gradient(135deg, #1A1515 0%, #2A1F1F 55%, #C8102E 180%)",
+            "linear-gradient(135deg, #1A1515 0%, #2A1F1F 55%, #3A0E14 100%)",
           color: "white",
-          position: "relative",
           fontFamily: "sans-serif",
-          padding: "48px 56px",
+          padding: "56px 64px",
+          position: "relative",
         }}
       >
-        {/* Fond décoratif doré en haut à droite */}
+        {/* Accent doré en haut à droite */}
         <div
           style={{
             position: "absolute",
-            top: 0,
-            right: 0,
-            width: 520,
-            height: 520,
+            top: -180,
+            right: -180,
+            width: 560,
+            height: 560,
             background:
               "radial-gradient(closest-side, rgba(200,160,59,0.18), transparent 70%)",
           }}
         />
 
-        {/* Colonne gauche : image produit */}
+        {/* Bande rouge verticale à gauche */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 80,
+            bottom: 80,
+            width: 10,
+            background: "#C8102E",
+            borderRadius: "0 8px 8px 0",
+          }}
+        />
+
+        {/* Colonne gauche : logo Z géant */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
             alignItems: "center",
-            width: 560,
+            justifyContent: "center",
+            width: 500,
             height: "100%",
-            marginRight: 40,
+            marginRight: 48,
+            marginTop: 8,
           }}
         >
           <div
             style={{
-              width: 500,
-              height: 500,
-              borderRadius: 24,
-              border: "4px solid rgba(200,160,59,0.35)",
-              background: "#111",
+              width: 440,
+              height: 440,
+              borderRadius: 40,
+              border: "10px solid #C8A03B",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              overflow: "hidden",
-              boxShadow: "0 10px 60px rgba(0,0,0,0.55)",
+              background: "rgba(200,160,59,0.08)",
+              fontSize: 300,
+              fontWeight: 900,
+              color: "#C8A03B",
+              letterSpacing: -10,
             }}
           >
-            {hasImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={image}
-                alt={title}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              <div
-                style={{
-                  fontSize: 220,
-                  fontWeight: 900,
-                  color: "#C8A03B",
-                }}
-              >
-                Z
-              </div>
-            )}
+            Z
           </div>
           {badge && (
             <div
               style={{
-                marginTop: 24,
+                marginTop: 28,
+                padding: "12px 32px",
                 background: "#C8102E",
                 color: "white",
-                fontSize: 28,
+                fontSize: 34,
                 fontWeight: 800,
-                letterSpacing: 2,
-                padding: "8px 22px",
+                letterSpacing: 6,
                 borderRadius: 999,
                 textTransform: "uppercase",
               }}
@@ -163,95 +145,78 @@ export async function GET(req) {
           )}
         </div>
 
-        {/* Colonne droite : titre + prix + branding */}
+        {/* Colonne droite : catégorie / titre / prix / pied */}
         <div
           style={{
             flex: 1,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            paddingLeft: 16,
+            paddingLeft: 24,
           }}
         >
-          {/* Catégorie en haut */}
           <div
             style={{
-              fontSize: 22,
-              letterSpacing: 6,
+              fontSize: 24,
+              letterSpacing: 8,
               textTransform: "uppercase",
               color: "#C8A03B",
               fontWeight: 700,
-              marginBottom: 20,
+              marginBottom: 28,
             }}
           >
             {category}
           </div>
 
-          {/* Titre produit (multi-lignes) */}
           {titleLines.map((line, idx) => (
             <div
               key={idx}
               style={{
-                fontSize: titleLines.length > 2 ? 62 : titleLines.length === 2 ? 74 : 84,
+                fontSize: titleLines.length > 2 ? 76 : 98,
                 fontWeight: 900,
-                lineHeight: 1.05,
-                letterSpacing: -1.5,
+                lineHeight: 1.02,
+                letterSpacing: -2,
                 color: "white",
-                marginBottom: 8,
-                maxWidth: 620,
+                marginBottom: 6,
+                maxWidth: 640,
               }}
             >
               {line}
             </div>
           ))}
 
-          {/* Prix */}
-          {price && (
-            <div
-              style={{
-                marginTop: 28,
-                fontSize: 72,
-                fontWeight: 900,
-                color: "#C8A03B",
-                letterSpacing: -1,
-              }}
-            >
-              {price}
+          {priceLines.length > 0 && (
+            <div style={{ marginTop: 36, display: "flex", flexWrap: "wrap" }}>
+              {priceLines.map((line, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    fontSize: 80,
+                    fontWeight: 900,
+                    color: "#C8A03B",
+                    letterSpacing: -1,
+                    marginRight: 16,
+                  }}
+                >
+                  {line}
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Pied de carte : domaine */}
           <div
             style={{
               marginTop: "auto",
               paddingTop: 40,
-              fontSize: 22,
-              color: "rgba(255,255,255,0.65)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               width: "100%",
+              fontSize: 24,
+              color: "rgba(255,255,255,0.7)",
             }}
           >
-            <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <span
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  background: "#C8A03B",
-                  color: "#1A1515",
-                  fontWeight: 900,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 18,
-                }}
-              >
-                Z
-              </span>
-              China Express · zenith6.vercel.app
-            </span>
+            <span>China Express · zenith6.vercel.app</span>
             <span>De Guanzhou à Ouaga</span>
           </div>
         </div>
