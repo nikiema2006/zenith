@@ -42,62 +42,69 @@ export async function generateMetadata({ params }) {
     }
 
     const description = truncate(product.description, 200);
-    const ogImage = buildOgImageUrl(product);
+  const ogImage = buildOgImageUrl(product);
 
-    return {
-      title: `${product.name}${product.badge ? " · " + product.badge : ""} · China Express`,
+  return {
+    title: `${product.name}${product.badge ? " · " + product.badge : ""} · China Express`,
+    description,
+    keywords: [
+      product.name,
+      product.category,
+      "importation chine afrique",
+      "chinois produits",
+      "prix usine",
+      "catalogue chine",
+      String(product.retail_price ? product.retail_price + " FCFA" : ""),
+    ].filter(Boolean),
+    alternates: {
+      canonical: `${SITE_URL}/produit/${slug}`,
+    },
+    // next/head : meta tags standards; on utilise "website" (valeur reconnue par Next.js 16)
+    // et on ajoute manuellement og:type=product + og:price* via l'objet "other"
+    // (qui devient <meta name="" content="">). Les "product:*" sont aussi ajoutés en other.
+    other: {
+      "og:type": "product",
+      ...(product.retail_price
+        ? {
+            "product:price:amount": String(product.retail_price),
+            "product:price:currency": "XOF",
+          }
+        : {}),
+      ...(product.category ? { "product:category": product.category } : {}),
+      "product:brand": "China Express",
+    },
+    openGraph: {
+      type: "website",
+      locale: "fr_FR",
+      url: `${SITE_URL}/produit/${slug}`,
+      siteName: "China Express · Zenith Global",
+      title: `${product.name}${product.badge ? " · " + product.badge : ""}`,
       description,
-      keywords: [
-        product.name,
-        product.category,
-        "importation chine afrique",
-        "chinois produits",
-        "prix usine",
-        "catalogue chine",
-        String(product.retail_price ? product.retail_price + " FCFA" : ""),
-      ].filter(Boolean),
-      alternates: {
-        canonical: `${SITE_URL}/produit/${slug}`,
-      },
-      openGraph: {
-        type: "product",
-        locale: "fr_FR",
-        url: `${SITE_URL}/produit/${slug}`,
-        siteName: "China Express · Zenith Global",
-        title: `${product.name}${product.badge ? " · " + product.badge : ""}`,
-        description,
-        images: [
-          {
-            url: ogImage,
-            width: 1200,
-            height: 630,
-            alt: product.name,
-          },
-        ],
-        category: product.category,
-        price: product.retail_price
-          ? {
-              amount: product.retail_price,
-              currency: "XOF",
-            }
-          : undefined,
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: `${product.name} · China Express`,
-        description,
-        images: [ogImage],
-      },
-      facebook: {
-        appId: process.env.NEXT_PUBLIC_FB_APP_ID || "",
-      },
-      robots: {
-        index: true,
-        follow: true,
-        "max-image-preview": "large",
-        "max-snippet": -1,
-      },
-    };
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: product.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} · China Express`,
+      description,
+      images: [ogImage],
+    },
+    facebook: {
+      appId: process.env.NEXT_PUBLIC_FB_APP_ID || "",
+    },
+    robots: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  };
   } catch (error) {
     return {
       title: "Produit non trouvé",
@@ -192,11 +199,31 @@ export default async function ProductDetailPage({ params }) {
     const product = await getProductBySlug(slug);
     const relatedProducts = await getRelatedProducts(product.id, product.category, 4);
 
+    // ===== URLs & chaînes PRÉ-CALCULÉES côté SERVEUR =====
+    // (garantit une hydration parfaite : le HTML initial du SSR est strictement
+    // identique au premier render React côté client.)
+    const productUrl = `${SITE_URL}/produit/${product.slug}`;
+
+    const whatsappMessage =
+      `Bonjour, je suis interesse par ce produit :\n\n` +
+      `Produit : ${product.name}\n` +
+      `Lien : ${productUrl}\n\n` +
+      `Prix detail : ${Number(product.retail_price).toLocaleString("fr-FR")} FCFA\n` +
+      `Prix gros : ${Number(product.wholesale_price).toLocaleString("fr-FR")} FCFA (des ${product.min_wholesale} unites)\n\n` +
+      `Merci de me donner plus d'informations sur la commande.`;
+
+    const whatsappUrl = `https://wa.me/22607336700?text=${encodeURIComponent(whatsappMessage)}`;
+
     return (
       <>
         <ProductJsonLd product={product} />
         <BreadcrumbJsonLd product={product} />
-        <ProductDetailClient product={product} related={relatedProducts} />
+        <ProductDetailClient
+          product={product}
+          related={relatedProducts}
+          productUrl={productUrl}
+          whatsappUrl={whatsappUrl}
+        />
       </>
     );
   } catch (error) {
