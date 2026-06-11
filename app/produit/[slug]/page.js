@@ -14,19 +14,16 @@ function truncate(text, max = 180) {
 }
 
 function buildOgImageUrl(product) {
-  const params = new URLSearchParams({
-    title: product.name || "",
-    price: product.retail_price
-      ? `${Number(product.retail_price).toLocaleString("fr-FR")} FCFA`
-      : "",
-    wholesale: product.wholesale_price
-      ? `${Number(product.wholesale_price).toLocaleString("fr-FR")} FCFA`
-      : "",
-    category: product.category || "",
-    image: product.images?.[0] || "",
-    badge: product.badge || "",
-  });
-  return `${SITE_URL}/api/og?${params.toString()}`;
+  // 1) Image OG PRINCIPALE : PREMIÈRE image produit (URL Supabase, déjà en prod — 100 % fiable)
+  //    C'est cette image qui sera affichée dans le partage WhatsApp/Facebook.
+  // 2) Image de fallback : logo.webp (image statique branding).
+  // NOTE : on préfère une image JPEG/WebP/PNG connue plutôt que du SVG (non supporté
+  // universellement par les crawlers des réseaux sociaux).
+  const firstImage = product?.images?.[0];
+  if (firstImage && typeof firstImage === "string" && firstImage.startsWith("http")) {
+    return firstImage;
+  }
+  return `${SITE_URL}/logo.webp`;
 }
 
 export async function generateMetadata({ params }) {
@@ -86,6 +83,7 @@ export async function generateMetadata({ params }) {
           width: 1200,
           height: 630,
           alt: product.name,
+          type: ogImage.endsWith(".png") ? "image/png" : "image/jpeg",
         },
       ],
     },
@@ -93,7 +91,14 @@ export async function generateMetadata({ params }) {
       card: "summary_large_image",
       title: `${product.name} · China Express`,
       description,
-      images: [ogImage],
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: product.name,
+        },
+      ],
     },
     facebook: {
       appId: process.env.NEXT_PUBLIC_FB_APP_ID || "",
