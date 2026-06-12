@@ -58,7 +58,7 @@ export default function Footer() {
             Un phénix qui porte tes colis. Un partenaire qui porte ton business.
           </p>
           <p className="text-sm text-foreground mt-3 font-display italic">
-            « L'Afrique se fournit en Chine. »
+            «  »
           </p>
         </div>
       </div>
